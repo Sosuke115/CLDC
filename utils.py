@@ -131,7 +131,7 @@ def data_setting(data,word_vectors,category,options):
     
     return data,params
 
-#train
+
 def train(data, params, data2,params2,options):
 
     model = CNN(**params).cuda(params["GPU"])
@@ -150,7 +150,6 @@ def train(data, params, data2,params2,options):
     
     for e in range(params["EPOCH"]):
         
-        #trainのlossを追加
         train_loss= 0
         
         #epochごとにnegativeはデータをランダムで選択
@@ -207,7 +206,7 @@ def train(data, params, data2,params2,options):
     print("max F_scores:", max_F1)
     return best_model
 
-#test
+
 def test(data, model, params, mode="test"):
     model.eval()
 
@@ -270,15 +269,11 @@ def get_fscores(data, model, params):
     
 
 
-
-
-
 def save_model(model, params):
     # path = f"saved_models/{params['DATASET']}_{params['MODEL']}_{params['EPOCH']}.pkl"
     new_dir_path = f"saved_models/{params['MODEL_NAME']}"
-    if os.path.exists(new_dir_path):
-        shutil.rmtree(new_dir_path)
-    os.mkdir(new_dir_path)
+    if not(os.path.exists(new_dir_path)):
+        os.mkdir(new_dir_path)
     path = f"saved_models/{params['MODEL_NAME']}/{params['CATEGORY']}_{params['EPOCH']}_s{params['RANDOM_STATE']}.pkl"
     pickle.dump(model, open(path, "wb"))
     print(f"A model is saved successfully as {path}!")

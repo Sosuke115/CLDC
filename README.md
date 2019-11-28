@@ -29,7 +29,7 @@ mv ted-cldc CLDC/data/
 ```
  
 ```bash
-python3 main.py word_vec_path1 word_vec_path2
+python3 main.py word_vec_path1 word_vec_path2 --model_name test --word_dim 512 --epoch 20
 ```
 
 or if you want to use this system in jupyter lab, please look at CLDC/run.ipynb
