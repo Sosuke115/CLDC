@@ -206,7 +206,7 @@ def train(data, params, data2,params2,options):
 
             best_model = copy.deepcopy(model)
 
-    print("max F_scores:", round(max_F1,3))
+    print("max dev_fscores:", round(max_F1,3))
     return best_model
 
 
