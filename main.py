@@ -53,7 +53,7 @@ def main():
 
 
         F1,tp1,fp1,tn1,fn1 = utils.get_fscores(data2, model, params2)
-        print("F_scores:",F1,"TP:",tp1,"FP:",fp1,"TN:",tn1,"FN:",fn1)
+        print("F_scores:",round(F1,3),"TP:",tp1,"FP:",fp1,"TN:",tn1,"FN:",fn1)
         print()
 
         tp += tp1

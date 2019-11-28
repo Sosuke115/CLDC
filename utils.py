@@ -141,6 +141,7 @@ def train(data, params, data2,params2,options):
     criterion = nn.CrossEntropyLoss()
 
     pre_dev_acc = 0
+    pre_dev_fscore = 0
     max_dev_acc = 0
     max_test_acc = 0
     max_F1 = -1
@@ -186,24 +187,26 @@ def train(data, params, data2,params2,options):
         
         train_loss /= len(data["train_x"])/params["BATCH_SIZE"]
 
-        dev_acc = test(data, model, params, mode="dev")
+        # dev_acc = test(data, model, params, mode="dev")
+        dev_fscore = get_fscores(data2, model, params2, mode="dev")
 
-        F1,tp1,fp1,tn1,fn1 = get_fscores(data2, model, params2)
+        F1,tp1,fp1,tn1,fn1 = get_fscores(data2, model, params2, mode="test")
 
-        print("epoch:", e + 1, "/ dev_acc:", dev_acc,"F_scores:",F1,"/ loss:", train_loss.item())
+        print("epoch:", e + 1, "/ dev_fscore:", round(dev_fscore[0],3),"test_fscores:",round(F1,3),"/ loss:", round(train_loss.item(),3))
 
         if params["EARLY_STOPPING"] and dev_acc <= pre_dev_acc:
             print("early stopping by dev_acc!")
             break
         else:
-            pre_dev_acc = dev_acc
+            # pre_dev_acc = dev_acc
+            pre_dev_fscore = dev_fscore[0]
             
-        if F1 > max_F1:
-            max_F1 = F1
+        if dev_fscore[0] > max_F1:
+            max_F1 = dev_fscore[0]
 
             best_model = copy.deepcopy(model)
 
-    print("max F_scores:", max_F1)
+    print("max F_scores:", round(max_F1,3))
     return best_model
 
 
@@ -252,9 +255,13 @@ def caluculate_f(preds,y):
     return f,tp,fp,tn,fn
 
 
-def get_fscores(data, model, params):
+def get_fscores(data, model, params, mode = "test"):
     model.eval()
-    x, y = data["test_x"], data["test_y"]
+    if mode == "test":
+        x, y = data["test_x"], data["test_y"]
+    if mode == "dev":
+        x, y = data["dev_x"], data["dev_y"]
+
     x = [[data["word_to_idx"][w] if w in data["vocab"] else params["VOCAB_SIZE"] for w in sent] +
          [params["VOCAB_SIZE"] + 1] * (params["MAX_SENT_LEN"] - len(sent))
          for sent in x]
@@ -262,7 +269,10 @@ def get_fscores(data, model, params):
     y = [data["classes"].index(c) for c in y]
     preds = np.argmax(model(x).cpu().data.numpy(), axis=1)
     acc = sum([1 if p == y else 0 for p, y in zip(preds, y)]) / len(preds)
-    print("test_acc2:",acc)
+    if mode == "test":
+        print("test_acc:",acc)
+    if mode == "dev":
+        print("dev_acc:",acc)
     F,tp,fp,tn,fn = caluculate_f(preds,y)
     return F,tp,fp,tn,fn
     
