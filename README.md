@@ -11,12 +11,16 @@ CLDC is a task for reviewing crosslingual word embedding .
 
  
 # Usage
+```bash
+mkdir CLDC/data
+mkdir CLDC/saved_models
+```
  
 Please git clone ted-cldc corpora from [here](http://www.clg.ox.ac.uk/tedcldc.html)
 
  
 ```bash
-mv ted-cldc CLDC/saved_models/
+mv ted-cldc CLDC/data/
 ```
 
 
