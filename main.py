@@ -12,7 +12,7 @@ def main():
     parser.add_argument("--dataset", default="ted")
     parser.add_argument("--save_model", default=True, action='store_true', help="whether saving model or not")
     parser.add_argument("--early_stopping", default=False, action='store_true', help="whether to apply early stopping")
-    parser.add_argument("--epoch", default=1, type=int, help="number of max epoch")
+    parser.add_argument("--epoch", default=10, type=int, help="number of max epoch")
     parser.add_argument("--learning_rate", default=0.0001, type=float, help="learning rate")
     parser.add_argument("--gpu", default=1, type=int, help="the number of gpu to be used")
     parser.add_argument("--model_name", default="test",help="model's name")
@@ -29,9 +29,8 @@ def main():
     word_vectors1 = KeyedVectors.load_word2vec_format(options.wordvec_path1, binary=False)
     print("loading word2vec2...")
     word_vectors2 = KeyedVectors.load_word2vec_format(options.wordvec_path2, binary=False)
-#     categories = ["art","arts","biology","business","creativity","culture","design","economics","education","entertainment","global","health","politics","science","technology"]
-#     categories = ["art","arts","biology"]
-    categories = ["arts"]
+    categories = ["art","arts","biology","business","creativity","culture","design","economics","education","entertainment","global","health","politics","science","technology"]
+    # categories = ["arts"]
     for category in categories:
         en = utils.read_ted("en",category,options)
         fr = utils.read_ted("fr",category,options)
@@ -70,9 +69,8 @@ def main():
 def main_jupyter(word_vectors1,word_vectors2,options):
     F = 0
     tp,fp,tn,fn = 0,0,0,0
-#     categories = ["art","arts","biology","business","creativity","culture","design","economics","education","entertainment","global","health","politics","science","technology"]
-#     categories = ["art","arts","biology"]
-    categories = ["arts"]
+    categories = ["art","arts","biology","business","creativity","culture","design","economics","education","entertainment","global","health","politics","science","technology"]
+
     for category in categories:
         en = utils.read_ted("en",category,options)
         fr = utils.read_ted("fr",category,options)

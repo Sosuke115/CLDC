@@ -28,7 +28,7 @@ mv ted-cldc CLDC/saved_models/
 python3 main.py word_vec_path1 word_vec_path2
 ```
 
-or if you want to use this system in jupyter lab, please look at CLDC/main_jupyter.ipynb
+or if you want to use this system in jupyter lab, please look at CLDC/run.ipynb
  
 
  
