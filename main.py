@@ -62,8 +62,10 @@ def main():
         fn += fn1
         F += F1
 
-    all_precision =  tp / (tp + fp)
-    all_recall =  tp / (tp + fn)
+    # all_precision =  tp / (tp + fp)
+    # all_recall =  tp / (tp + fn)
+    all_precision = (tp + tn) / (tp + tn + fn + fp)
+    all_recall = (tp + tn) / (tp + tn + fn + fp)
     f = 2*all_precision*all_recall / (all_precision + all_recall) 
     F = F / len(categories)
 
