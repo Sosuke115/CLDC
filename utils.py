@@ -12,6 +12,7 @@ import shutil
 
 
 
+
 # cnt = 0
 def read_ted(lang,category,options):
     if lang == "en":
@@ -39,11 +40,12 @@ def read_ted(lang,category,options):
         nega = shuffle(nega,random_state=options.random_state)
 
         if mode == "train":
-            dev_idx = 500
-            data["dev_x"], data["dev_y"] = (posi[:dev_idx]+nega[:dev_idx]),(["positive"]*dev_idx + ["negative"]*dev_idx)
+            dev_idx1 = len(posi) // 8
+            dev_idx2 = len(nega) // 8
+            data["dev_x"], data["dev_y"] = (posi[:dev_idx1]+nega[:dev_idx2]),(["positive"]*dev_idx1 + ["negative"]*dev_idx2)
             data["dev_x"], data["dev_y"] = shuffle(data["dev_x"], data["dev_y"],random_state=options.random_state)
-            data["train_positive"] = posi[dev_idx:]
-            data["train_negative"] = nega[dev_idx:]
+            data["train_positive"] = posi[dev_idx1:]
+            data["train_negative"] = nega[dev_idx2:]
 
         else:
             y = ["positive"]*len(posi) + ["negative"]*len(nega)
@@ -194,6 +196,7 @@ def train(data, params, data2,params2,options):
 
         print("epoch:", e + 1, "/ dev_fscore:", round(dev_fscore[0],3),"test_fscores:",round(F1,3),"/ loss:", round(train_loss.item(),3))
 
+
         if params["EARLY_STOPPING"] and dev_acc <= pre_dev_acc:
             print("early stopping by dev_acc!")
             break
@@ -249,8 +252,11 @@ def caluculate_f(preds,y):
     if tp == 0:
         f = 0
     else:   
-        precision = tp / (tp + fp)
-        recall = tp / (tp + fn)
+        #micro f
+        precision = (tp+tn) /(tp + tn + fn + fp)
+        recall = (tp+tn) /(tp + tn + fn + fp)
+        # precision = tp / (tp + fp)
+        # recall = tp / (tp + fn)
         f = 2*precision*recall / (precision + recall)  
     return f,tp,fp,tn,fn
 
@@ -270,10 +276,11 @@ def get_fscores(data, model, params, mode = "test"):
     preds = np.argmax(model(x).cpu().data.numpy(), axis=1)
     acc = sum([1 if p == y else 0 for p, y in zip(preds, y)]) / len(preds)
     if mode == "test":
-        print("test_acc:",acc)
+        print("test_acc:",round(acc,3))
     if mode == "dev":
-        print("dev_acc:",acc)
+        print("dev_acc:",round(acc,3))
     F,tp,fp,tn,fn = caluculate_f(preds,y)
+    
     return F,tp,fp,tn,fn
     
     
