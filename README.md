@@ -9,6 +9,13 @@ CLDC is a task for reviewing crosslingual word embedding .
 * Python 3.6.5
 * Pytorch 1.1.0
 
+# Test Dataset
+[ted-cldc](http://www.clg.ox.ac.uk/tedcldc.html)
+
+[amazon](https://github.com/facebookresearch/MLDoc)
+
+[MLdoc](https://webis.de/data/webis-cls-10.html)
+
 
  
 # Usage
@@ -17,12 +24,6 @@ mkdir CLDC/data
 mkdir CLDC/saved_models
 ```
  
-Please git clone ted-cldc corpora from [here](http://www.clg.ox.ac.uk/tedcldc.html)
-
-Please git clone amazon corpora from [here](https://github.com/facebookresearch/MLDoc)
-
-Please git clone MLdoc corpora from [here](https://webis.de/data/webis-cls-10.html)
-
 
 
 
