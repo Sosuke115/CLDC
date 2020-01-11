@@ -1,6 +1,9 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from sklearn.utils import shuffle
+
+
 
 
 class CNN(nn.Module):
@@ -17,42 +20,64 @@ class CNN(nn.Module):
         self.FILTER_NUM = kwargs["FILTER_NUM"]
         self.DROPOUT_PROB = kwargs["DROPOUT_PROB"]
         self.RANDOM_STATE = kwargs["RANDOM_STATE"]
+        self.WV_MATRIX = kwargs["WV_MATRIX"]
+        self.GPU = kwargs["GPU"]
         self.IN_CHANNEL = 1
 
+        # np.random.seed(self.RANDOM_STATE)
+        # random.seed(self.RANDOM_STATE)
+        torch.manual_seed(self.RANDOM_STATE)
+        torch.cuda.manual_seed(self.RANDOM_STATE)
+
         assert (len(self.FILTERS) == len(self.FILTER_NUM))
+        
+        self.embedding = nn.Embedding(len(kwargs["WV_MATRIX"]), self.WORD_DIM, padding_idx=self.VOCAB_SIZE + 1)
+#         self.embedding = nn.Embedding(self.VOCAB_SIZE + 2, self.WORD_DIM, padding_idx=self.VOCAB_SIZE + 1)
+        self.embedding.weight.data.copy_(torch.from_numpy(self.WV_MATRIX))
+        
+        self.embedding.weight.requires_grad = False
 
         # one for UNK and one for zero padding
 
         # fix emb vocabsize
         # self.embedding = nn.Embedding(self.VOCAB_SIZE + 2, self.WORD_DIM, padding_idx=self.VOCAB_SIZE + 1)
 #         if self.MODEL == "static" or self.MODEL == "non-static" or self.MODEL == "multichannel":
-        self.embedding = nn.Embedding(len(kwargs["WV_MATRIX"]), self.WORD_DIM, padding_idx=self.VOCAB_SIZE + 1)
+#   
         
 #         else:
 #             self.embedding = nn.Embedding(self.VOCAB_SIZE + 2, self.WORD_DIM, padding_idx=self.VOCAB_SIZE + 1)
             
         
-        if self.MODEL == "static" or self.MODEL == "non-static" or self.MODEL == "multichannel":
-            self.WV_MATRIX = kwargs["WV_MATRIX"]
-            self.embedding.weight.data.copy_(torch.from_numpy(self.WV_MATRIX))
-            if self.MODEL == "static":
-                self.embedding.weight.requires_grad = False
-            elif self.MODEL == "multichannel":
-                self.embedding2 = nn.Embedding(self.VOCAB_SIZE + 2, self.WORD_DIM, padding_idx=self.VOCAB_SIZE + 1)
-                self.embedding2.weight.data.copy_(torch.from_numpy(self.WV_MATRIX))
-                self.embedding2.weight.requires_grad = False
-                self.IN_CHANNEL = 2
+#         if self.MODEL == "static" or self.MODEL == "non-static" or self.MODEL == "multichannel":
+#             self.WV_MATRIX = kwargs["WV_MATRIX"]
+#             self.embedding.weight.data.copy_(torch.from_numpy(self.WV_MATRIX))
+#             if self.MODEL == "static":
+#                 self.embedding.weight.requires_grad = False
+#             elif self.MODEL == "multichannel":
+#                 self.embedding2 = nn.Embedding(self.VOCAB_SIZE + 2, self.WORD_DIM, padding_idx=self.VOCAB_SIZE + 1)
+#                 self.embedding2.weight.data.copy_(torch.from_numpy(self.WV_MATRIX))
+#                 self.embedding2.weight.requires_grad = False
+#                 self.IN_CHANNEL = 2
+        
+        seed_arr = range(len(self.FILTERS))
+        seed_arr = shuffle(seed_arr,random_state = self.RANDOM_STATE)
+        torch.manual_seed(self.RANDOM_STATE)
+        torch.cuda.manual_seed(self.RANDOM_STATE)
 
         for i in range(len(self.FILTERS)):
+            torch.manual_seed(seed_arr[i])
+            torch.cuda.manual_seed(seed_arr[i])
             conv = nn.Conv1d(self.IN_CHANNEL, self.FILTER_NUM[i], self.WORD_DIM * self.FILTERS[i], stride=self.WORD_DIM)
             setattr(self, f'conv_{i}', conv)
-
+        torch.manual_seed(self.RANDOM_STATE)
+        torch.cuda.manual_seed(self.RANDOM_STATE)
         self.fc = nn.Linear(sum(self.FILTER_NUM), self.CLASS_SIZE)
 
     def get_conv(self, i):
         return getattr(self, f'conv_{i}')
 
     def forward(self, inp):
+              
         x = self.embedding(inp).view(-1, 1, self.WORD_DIM * self.MAX_SENT_LEN)
         if self.MODEL == "multichannel":
             x2 = self.embedding2(inp).view(-1, 1, self.WORD_DIM * self.MAX_SENT_LEN)
@@ -66,6 +91,7 @@ class CNN(nn.Module):
 
         x = torch.cat(conv_results, 1)
         torch.manual_seed(self.RANDOM_STATE)
+        torch.cuda.manual_seed(self.RANDOM_STATE)
         x = F.dropout(x, p=self.DROPOUT_PROB, training=self.training)
         x = self.fc(x)
 
