@@ -1,4 +1,4 @@
-# CLDC 
+# CLDC (Cross-Lingual Document Crassification)
  
 CLDC is a task for reviewing crosslingual word embedding .
  
