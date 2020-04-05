@@ -47,6 +47,7 @@ or if you want to use this system in jupyter lab, please look at CLDC/run.ipynb
 # Author
  
 * Sosuke
+* website : https://sosuke115.github.io
 * Twitter : https://twitter.com/ponyo_ponyo115
  
 
