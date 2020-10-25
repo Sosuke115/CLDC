@@ -11,6 +11,7 @@ import os
 import shutil
 import model
 import importlib
+
 importlib.reload(model)
 
 
@@ -32,7 +33,19 @@ def read_ted(lang, category, options):
         posi = []
         nega = []
         for porn in porns:
-            with open("data/ted-cldc/" + lang + "/" + mode + "/" + category + "/all/" + porn + ".new.txt", "r", encoding="utf-8") as f:
+            with open(
+                "data/ted-cldc/"
+                + lang
+                + "/"
+                + mode
+                + "/"
+                + category
+                + "/all/"
+                + porn
+                + ".new.txt",
+                "r",
+                encoding="utf-8",
+            ) as f:
                 for line in f:
                     if line[-1] == "\n":
                         line = line[:-1]
@@ -75,7 +88,11 @@ def read_amazon(lang, options):
         x, y = [], []
         porns = ["positive", "negative"]
         for porn in porns:
-            with open("data/amazon/" + lang + "/" + mode + "/" + porn + ".low", "r", encoding="utf-8") as f:
+            with open(
+                "data/amazon/" + lang + "/" + mode + "/" + porn + ".low",
+                "r",
+                encoding="utf-8",
+            ) as f:
                 for line in f:
                     if line[-1] == "\n":
                         line = line[:-1]
@@ -149,8 +166,17 @@ def data_setting(data, word_vectors, category, options):
             if len(sen) > 50:
                 data[mode][i] = data[mode][i][:50]
 
-    data["vocab"] = sorted(list(set(
-        [w for sent in data["train_x"] + data["dev_x"] + data["test_x"] for w in sent])))
+    data["vocab"] = sorted(
+        list(
+            set(
+                [
+                    w
+                    for sent in data["train_x"] + data["dev_x"] + data["test_x"]
+                    for w in sent
+                ]
+            )
+        )
+    )
 
     data["classes"] = sorted(list(set(data["dev_y"])))
     data["word_to_idx"] = {w: i for i, w in enumerate(data["vocab"])}
@@ -161,14 +187,15 @@ def data_setting(data, word_vectors, category, options):
         "MODEL_NAME": options.model_name,
         "CATEGORY": category,
         "RANDOM_STATE": options.random_state,
-
         "MODEL": options.model,
         "DATASET": options.dataset,
         "SAVE_MODEL": options.save_model,
         "EARLY_STOPPING": options.early_stopping,
         "EPOCH": options.epoch,
         "LEARNING_RATE": options.learning_rate,
-        "MAX_SENT_LEN": max([len(sent) for sent in data["train_x"] + data["dev_x"] + data["test_x"]]),
+        "MAX_SENT_LEN": max(
+            [len(sent) for sent in data["train_x"] + data["dev_x"] + data["test_x"]]
+        ),
         "BATCH_SIZE": 50,
         "WORD_DIM": options.word_dim,
         "VOCAB_SIZE": len(data["vocab"]),
@@ -177,7 +204,7 @@ def data_setting(data, word_vectors, category, options):
         "FILTER_NUM": [8, 8, 8, 8],
         "DROPOUT_PROB": 0.5,
         "NORM_LIMIT": 3,
-        "GPU": options.gpu
+        "GPU": options.gpu,
     }
 
     if params["MODEL"] != "rand":
@@ -187,8 +214,7 @@ def data_setting(data, word_vectors, category, options):
 
         # 辞書にない単語は全てUNK扱いして同じベクトルで扱う
         np.random.seed(options.random_state)
-        unkvec = np.random.uniform(-0.01, 0.01,
-                                   options.word_dim).astype("float32")
+        unkvec = np.random.uniform(-0.01, 0.01, options.word_dim).astype("float32")
 
         wv_matrix = []
 
@@ -240,8 +266,7 @@ def train(data, params, data2, params2, options):
 
     randam_state_arr = range(params["EPOCH"])
 
-    randam_state_arr = shuffle(
-        randam_state_arr, random_state=options.random_state)
+    randam_state_arr = shuffle(randam_state_arr, random_state=options.random_state)
 
     if options.dataset == "ted":
         data = rearrange_ted(data)
@@ -251,30 +276,33 @@ def train(data, params, data2, params2, options):
         if options.dataset == "ted":
             lennega = len(data["train_positive"])
             data["train_negative"] = shuffle(
-                data["train_negative"], random_state=randam_state_arr[e])
+                data["train_negative"], random_state=randam_state_arr[e]
+            )
             data["train_positive"] = shuffle(
-                data["train_positive"], random_state=randam_state_arr[e])
-            data["train_x"] = data["train_positive"] + \
-                data["train_negative"][0:lennega]
+                data["train_positive"], random_state=randam_state_arr[e]
+            )
+            data["train_x"] = data["train_positive"] + data["train_negative"][0:lennega]
             data["train_y"] = ["positive"] * lennega + ["negative"] * lennega
 
             data["train_x"], data["train_y"] = shuffle(
-                data["train_x"], data["train_y"], random_state=options.random_state)
+                data["train_x"], data["train_y"], random_state=options.random_state
+            )
 
-        model.embedding.weight.data.copy_(
-            torch.from_numpy(params["WV_MATRIX"]))
+        model.embedding.weight.data.copy_(torch.from_numpy(params["WV_MATRIX"]))
 
         train_loss = 0
 
         for i in range(0, len(data["train_x"]), params["BATCH_SIZE"]):
             batch_range = min(params["BATCH_SIZE"], len(data["train_x"]) - i)
 
-            batch_x = [[data["word_to_idx"][w] for w in sent] +
-                       [params["VOCAB_SIZE"] + 1] *
-                       (params["MAX_SENT_LEN"] - len(sent))
-                       for sent in data["train_x"][i:i + batch_range]]
-            batch_y = [data["classes"].index(
-                c) for c in data["train_y"][i:i + batch_range]]
+            batch_x = [
+                [data["word_to_idx"][w] for w in sent]
+                + [params["VOCAB_SIZE"] + 1] * (params["MAX_SENT_LEN"] - len(sent))
+                for sent in data["train_x"][i : i + batch_range]
+            ]
+            batch_y = [
+                data["classes"].index(c) for c in data["train_y"][i : i + batch_range]
+            ]
             batch_x = Variable(torch.LongTensor(batch_x)).cuda(params["GPU"])
             batch_y = Variable(torch.LongTensor(batch_y)).cuda(params["GPU"])
 
@@ -288,21 +316,32 @@ def train(data, params, data2, params2, options):
             nn.utils.clip_grad_norm(parameters, max_norm=params["NORM_LIMIT"])
             optimizer.step()
 
-        train_loss /= len(data["train_x"])/params["BATCH_SIZE"]
+        train_loss /= len(data["train_x"]) / params["BATCH_SIZE"]
 
-        model.embedding.weight.data.copy_(
-            torch.from_numpy(params2["WV_MATRIX"]))
+        model.embedding.weight.data.copy_(torch.from_numpy(params2["WV_MATRIX"]))
 
         if options.dataset == "ted":
             dev_fscore = get_fscores(data2, model, params2, mode="dev")
-            print("epoch:", e + 1, "/ dev_fscore:",
-                  round(dev_fscore[0], 3), "/ loss:", round(train_loss.item(), 3))
+            print(
+                "epoch:",
+                e + 1,
+                "/ dev_fscore:",
+                round(dev_fscore[0], 3),
+                "/ loss:",
+                round(train_loss.item(), 3),
+            )
 
         if (options.dataset == "amazon") or (options.dataset == "mldoc"):
             dev_acc = test(data2, model, params2, mode="dev")
 
-            print("epoch:", e + 1, "dev_acc:", round(dev_acc, 3),
-                  "/ loss:", round(train_loss.item(), 3))
+            print(
+                "epoch:",
+                e + 1,
+                "dev_acc:",
+                round(dev_acc, 3),
+                "/ loss:",
+                round(train_loss.item(), 3),
+            )
 
         if (options.dataset == "amazon") or (options.dataset == "mldoc"):
             if params["EARLY_STOPPING"] and dev_acc <= pre_dev_acc:
@@ -342,9 +381,14 @@ def test(data, model, params, mode="test"):
     elif mode == "test":
         x, y = data["test_x"], data["test_y"]
 
-    x = [[data["word_to_idx"][w] if w in data["vocab"] else params["VOCAB_SIZE"] for w in sent] +
-         [params["VOCAB_SIZE"] + 1] * (params["MAX_SENT_LEN"] - len(sent))
-         for sent in x]
+    x = [
+        [
+            data["word_to_idx"][w] if w in data["vocab"] else params["VOCAB_SIZE"]
+            for w in sent
+        ]
+        + [params["VOCAB_SIZE"] + 1] * (params["MAX_SENT_LEN"] - len(sent))
+        for sent in x
+    ]
 
     x = Variable(torch.LongTensor(x)).cuda(params["GPU"])
     y = [data["classes"].index(c) for c in y]
@@ -376,7 +420,7 @@ def caluculate_f(preds, y):
         # recall = (tp+tn) /(tp + tn + fn + fp)
         precision = tp / (tp + fp)
         recall = tp / (tp + fn)
-        f = 2*precision*recall / (precision + recall)
+        f = 2 * precision * recall / (precision + recall)
     return f, tp, fp, tn, fn
 
 
@@ -387,9 +431,14 @@ def get_fscores(data, model, params, mode="test"):
     if mode == "dev":
         x, y = data["dev_x"], data["dev_y"]
 
-    x = [[data["word_to_idx"][w] if w in data["vocab"] else params["VOCAB_SIZE"] for w in sent] +
-         [params["VOCAB_SIZE"] + 1] * (params["MAX_SENT_LEN"] - len(sent))
-         for sent in x]
+    x = [
+        [
+            data["word_to_idx"][w] if w in data["vocab"] else params["VOCAB_SIZE"]
+            for w in sent
+        ]
+        + [params["VOCAB_SIZE"] + 1] * (params["MAX_SENT_LEN"] - len(sent))
+        for sent in x
+    ]
     x = Variable(torch.LongTensor(x)).cuda(params["GPU"])
     y = [data["classes"].index(c) for c in y]
     preds = np.argmax(model(x).cpu().data.numpy(), axis=1)
@@ -400,9 +449,9 @@ def get_fscores(data, model, params, mode="test"):
 
 def save_model(model, params):
     new_dir_path = f"saved_models/{params['MODEL_NAME']}"
-    if not(os.path.exists(new_dir_path)):
+    if not (os.path.exists(new_dir_path)):
         os.mkdir(new_dir_path)
-    if (params['DATASET'] == "amazon") or (params['DATASET'] == "mldoc"):
+    if (params["DATASET"] == "amazon") or (params["DATASET"] == "mldoc"):
         path = f"saved_models/{params['MODEL_NAME']}/{params['DATASET']}_{params['EPOCH']}_s{params['RANDOM_STATE']}.pkl"
     else:
         path = f"saved_models/{params['MODEL_NAME']}/{params['CATEGORY']}_{params['EPOCH']}_s{params['RANDOM_STATE']}.pkl"
@@ -411,7 +460,7 @@ def save_model(model, params):
 
 
 def load_model(params):
-    if (params['DATASET'] == "amazon") or (params['DATASET'] == "mldoc"):
+    if (params["DATASET"] == "amazon") or (params["DATASET"] == "mldoc"):
         path = f"saved_models/{params['MODEL_NAME']}/{params['DATASET']}_{params['EPOCH']}_s{params['RANDOM_STATE']}.pkl"
     else:
         path = f"saved_models/{params['MODEL_NAME']}/{params['CATEGORY']}_{params['EPOCH']}_s{params['RANDOM_STATE']}.pkl"
