@@ -15,6 +15,7 @@ def main():
         default="train",
         help="train: train (with test) a model / test: test saved models",
     )
+
     parser.add_argument(
         "--model",
         default="static",
