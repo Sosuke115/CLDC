@@ -55,7 +55,7 @@ mv ted-cldc CLDC/data/
 python3 main.py src_word_vec_path1 trg_word_vec_path2 --lang1 en --lang2 fr --dataset mldoc --model_name test --word_dim 512 
 ```
 
-or if you want to use this system in jupyter lab, please look at CLDC/run.ipynb
+or if you want to use this system in jupyter lab (or jupyter notebook), please look at CLDC/run.ipynb
 
 
 
